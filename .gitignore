@@ -1,0 +1,8 @@
+# Work data never goes in this public repository.
+private/
+*.xlsx
+*.xlsm
+*.xls
+*.csv
+*-private.js
+*.json.private
