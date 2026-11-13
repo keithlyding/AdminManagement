@@ -106,6 +106,9 @@
     return text ? JSON.parse(text).d : null;
   }
   const merge = (path, body) => sp("POST", path, body, { "X-HTTP-Method": "MERGE", "IF-MATCH": "*" });
+  // SharePoint keeps view and column formatting inside XML, so <, > and & are sent as
+  // JSON \u escapes (the same JSON, but nothing for the XML reader to trip on).
+  const formatJson = o => JSON.stringify(o).replace(/</g, "\\u003c").replace(/>/g, "\\u003e").replace(/&/g, "\\u0026");
   const xml = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;");
   const q = s => String(s).replace(/'/g, "''"); // inside '...' in a REST URL
   const log = (...a) => console.log("%c[Work Hub]", "color:#0a7d55;font-weight:bold", ...a);
@@ -173,7 +176,7 @@
   // items, which are grayed). Priority Score is bold red at 22 or more, like the sheet.
   const ROW_FORMAT = {
     "$schema": "https://developer.microsoft.com/json-schemas/sp/v2/row-formatting.schema.json",
-    "additionalRowClass": "=if([$TaskStatus] == 'Complete', 'ms-fontColor-neutralTertiary', if([$TaskDueDate] == '', '', if(toLocaleDateString([$TaskDueDate]) == toLocaleDateString(@now), 'sp-field-severity--warning', if([$TaskDueDate] < @now, 'sp-field-severity--severeWarning', ''))))"
+    "additionalRowClass": "=if([$TaskStatus] == 'Complete', 'ms-fontColor-neutralTertiary', if([$TaskDueDate] == '', '', if(toLocaleDateString([$TaskDueDate]) == toLocaleDateString(@now), 'sp-field-severity--warning', if(@now > [$TaskDueDate], 'sp-field-severity--severeWarning', ''))))"
   };
   const SCORE_FORMAT = {
     "$schema": "https://developer.microsoft.com/json-schemas/sp/v2/column-formatting.schema.json",
@@ -237,7 +240,7 @@
     if (titleDisplay) await merge(`${L}/fields/getbyinternalnameortitle('Title')`, { __metadata: { type: "SP.Field" }, Title: titleDisplay });
   }
   async function setColumnFormat(list, field, format) {
-    await merge(`/web/lists(guid'${list.Id}')/fields/getbyinternalnameortitle('${field}')`, { __metadata: { type: "SP.Field" }, CustomFormatter: JSON.stringify(format) });
+    await merge(`/web/lists(guid'${list.Id}')/fields/getbyinternalnameortitle('${field}')`, { __metadata: { type: "SP.Field" }, CustomFormatter: formatJson(format) });
   }
   async function setViewColumns(L, viewId, columns) {
     const V = `${L}/views(guid'${viewId}')`;
@@ -249,14 +252,18 @@
     const existing = await sp("GET", `${L}/views?$select=Id,Title`);
     const have = new Map(existing.results.map(v => [v.Title, v.Id]));
     for (const v of views) {
-      if (have.has(v.title)) continue;
-      const made = await sp("POST", `${L}/views`, { __metadata: { type: "SP.View" }, Title: v.title, PersonalView: false, ViewQuery: v.query, RowLimit: 100, Paged: true });
-      await setViewColumns(L, made.Id, v.columns);
+      let viewId = have.get(v.title);
+      if (!viewId) {
+        const made = await sp("POST", `${L}/views`, { __metadata: { type: "SP.View" }, Title: v.title, PersonalView: false, ViewQuery: v.query, RowLimit: 100, Paged: true });
+        viewId = made.Id;
+        await setViewColumns(L, viewId, v.columns);
+        log(`  view "${v.title}"`);
+      }
+      // Applied to existing views too, so a run that stopped half-way is finished off.
       const extra = { __metadata: { type: "SP.View" } };
-      if (rowFormat) extra.CustomFormatter = JSON.stringify(rowFormat);
+      if (rowFormat) extra.CustomFormatter = formatJson(rowFormat);
       if (v.isDefault) extra.DefaultView = true;
-      if (Object.keys(extra).length > 1) await merge(`${L}/views(guid'${made.Id}')`, extra);
-      log(`  view "${v.title}"`);
+      if (Object.keys(extra).length > 1) await merge(`${L}/views(guid'${viewId}')`, extra);
     }
   }
   async function setDefaultViewColumns(list, columns) {

@@ -22,7 +22,7 @@ global.fetch=async(url,opt)=>{
   if(path.endsWith('/fields/createfieldasxml')){const x=body.parameters.SchemaXml; const n=x.match(/Name="([^"]+)"/)[1]; if(L.fields.has(n)) throw new Error('dup field '+n);
      if(!/^<Field [^>]*(\/>|>.*<\/Field>)$/.test(x)) throw new Error('bad xml '+x); L.fields.set(n,{xml:x}); return res(201,{});}
   let m=path.match(/fields\/getbyinternalnameortitle\('([^']+)'\)$/);
-  if(m){ if(!L.fields.has(m[1])) return res(404); Object.assign(L.fields.get(m[1]),body); return res(204);}
+  if(m){ if(!L.fields.has(m[1])) return res(404); if(/[<>&]/.test(body.CustomFormatter||'')) return res(500,{error:'XmlException'}); Object.assign(L.fields.get(m[1]),body); return res(204);}
   if(path.endsWith('/views?$select=Id,Title')) return res(200,{results:[...L.views].map(([t,v])=>({Title:t,Id:v.Id}))});
   if(path.endsWith('/views') && verb==='POST'){const g=guid(); L.views.set(body.Title,{Id:g,fields:[],query:body.ViewQuery}); return res(201,{Id:g});}
   m=path.match(/views\/getbytitle\('([^']+)'\)/); if(m){const v=L.views.get(m[1]); return v?res(200,{Id:v.Id}):res(404);}
@@ -30,7 +30,8 @@ global.fetch=async(url,opt)=>{
   if(m){const v=[...L.views.values()].find(v=>v.Id===m[1]); if(!v) return res(404);
      if(m[2]==='/viewfields/removeallviewfields'){v.fields=[];return res(200,{});}
      const f=m[2].match(/addviewfield\('([^']+)'\)/); if(f){ if(f[1]!=='LinkTitle'&&!L.fields.has(f[1])) throw new Error('view field missing '+f[1]); v.fields.push(f[1]); return res(200,{});}
-     if(verb==='MERGE'){Object.assign(v,body);return res(204);} }
+     if(verb==='MERGE'){ if(/[<>&]/.test(body.CustomFormatter||'')) return res(500,{error:'XmlException: raw < > or & in CustomFormatter'});
+       Object.assign(v,body);return res(204);} }
   if(path.endsWith('/items') && verb==='POST'){ for(const k of Object.keys(body)) if(k!=='__metadata'&&k!=='Title'&&!L.fields.has(k)) throw new Error('item field missing '+k);
      L.items.push(body); return res(201,{Id:L.items.length});}
   throw new Error('unmocked '+verb+' '+path);
@@ -64,9 +65,14 @@ const fs2=require('path'); const src=fs.readFileSync(fs2.join(__dirname,'..','se
  assert.strictEqual(a.items[2].TaskStatus,"Not Started");
  assert(a.views.get('My Open Tasks').DefaultView,'My Open Tasks is the default view');
  assert(a.views.get('My Open Tasks').query.includes('Pat Example'));
+ const rule=JSON.parse(a.views.get('My Open Tasks').CustomFormatter).additionalRowClass;
+ assert(rule.includes('@now > [$TaskDueDate]'),'row rule survives the escaping');
+ // A run that stopped after creating a view (as on the first real run) is finished off by the next one.
+ delete a.views.get('Completed').CustomFormatter; a.views.get('My Open Tasks').DefaultView=false;
  assert.strictEqual(a.fields.get('Title').Title,'Task');
  const before=calls.length; vm.runInContext(src,ctx); await new Promise(r=>setTimeout(r,300));
  assert.strictEqual(calls.slice(before).filter(c=>/createfield|POST \/web\/lists$|\/items$/.test(c)).length,0,'second run creates nothing');
  assert.strictEqual(a.items.length,4);
+ assert(a.views.get('Completed').CustomFormatter && a.views.get('My Open Tasks').DefaultView,'rerun finishes views');
  console.log('setup.test.js: all checks passed ('+calls.length+' REST calls)');
 })().catch(e=>{console.error(e);process.exit(1);});
