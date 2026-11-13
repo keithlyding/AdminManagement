@@ -45,8 +45,8 @@ rename actions and paste expressions.
       | Task | `items('EachDuty')?['Title']` |
       | Description | `items('EachDuty')?['Deliverable']` |
       | Hurdles / Needs / Notes | `items('EachDuty')?['RecNotes']` |
-      | Requester | *type* Recurring |
-      | Assigned To | `items('EachDuty')?['Owners']` |
+      | Requester Value | *Enter custom value*, type Recurring |
+      | Assigned To Value | *Enter custom value*, then `items('EachDuty')?['Owners']` |
       | Status Value | *choose* Not Started |
       | Date Assigned | `outputs('Today')` |
       | Due Date | `formatDateTime(items('EachDuty')?['NextDue'], 'yyyy-MM-dd')` |

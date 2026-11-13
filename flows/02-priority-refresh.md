@@ -56,7 +56,7 @@ rename actions and paste expressions.
       `if(less(outputs('DaysLeft'), 0), 10, if(equals(outputs('DaysLeft'), 0), 8, if(equals(outputs('DaysLeft'), 1), 6, if(lessOrEquals(outputs('DaysLeft'), 3), 4, if(lessOrEquals(outputs('DaysLeft'), 7), 2, 0)))))`
 
    c. **Compose** **NewScore**:
-      `add(add(add(coalesce(outputs('Scores')?['Category']?[coalesce(items('EachItem')?['TaskCategory']?['Value'], '')], 0), mul(3, coalesce(outputs('Scores')?['Necessity']?[coalesce(items('EachItem')?['Necessity']?['Value'], '')], 0))), if(contains(body('ManagerNames'), coalesce(items('EachItem')?['Requester'], '')), 3, 0)), outputs('DuePoints'))`
+      `add(add(add(coalesce(outputs('Scores')?['Category']?[coalesce(items('EachItem')?['TaskCategory']?['Value'], '')], 0), mul(3, coalesce(outputs('Scores')?['Necessity']?[coalesce(items('EachItem')?['Necessity']?['Value'], '')], 0))), if(contains(body('ManagerNames'), coalesce(items('EachItem')?['Requester']?['Value'], '')), 3, 0)), outputs('DuePoints'))`
 
    d. **Compose** **NewQuickWin**:
       `add(add(coalesce(outputs('Scores')?['Ease']?[coalesce(items('EachItem')?['Ease']?['Value'], '')], 0), coalesce(outputs('Scores')?['Cost']?[coalesce(items('EachItem')?['CostLevel']?['Value'], '')], 0)), coalesce(outputs('Scores')?['Time']?[coalesce(items('EachItem')?['EffortTime']?['Value'], '')], 0))`

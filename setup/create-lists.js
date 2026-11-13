@@ -119,11 +119,16 @@
   // renamed in Lists at any time without breaking anything.
   const withExtra = (base, values) => base.concat([...new Set(values.filter(v => v && !base.includes(v)))]);
   const tasks = DATA.tasks || [];
+  const names = (flag, used) => [...new Set((DATA.people || []).filter(p => p[flag]).map(p => p.name)
+    .concat(used, [CONFIG.myName]).filter(Boolean))].sort((a, b) => a.localeCompare(b));
   const ACTION_FIELDS = [
     ["Details", "Description", "Note"],
     ["HurdlesNotes", "Hurdles / Needs / Notes", "Note"],
-    ["Requester", "Requester", "Text"],
-    ["AssigneeNames", "Assigned To", "Text", { default: CONFIG.myName || "" }],
+    // Drop-downs filled from the People list; a name not on it can still be typed in
+    // (fill-in), which the email flow needs for new senders. setup/sync-dropdowns.js
+    // refreshes these choices after you add people.
+    ["Requester", "Requester", "Choice", { fillIn: true, choices: names("requester", tasks.map(t => t.requester)) }],
+    ["AssigneeNames", "Assigned To", "Choice", { fillIn: true, default: CONFIG.myName || "", choices: names("assignee", tasks.map(t => t.assignedTo)) }],
     ["TaskStatus", "Status", "Choice", { choices: withExtra(STATUS, tasks.map(t => t.status)), default: "Not Started" }],
     ["DateAssigned", "Date Assigned", "Date", { today: true }],
     ["TaskDueDate", "Due Date", "Date"],
@@ -167,7 +172,7 @@
     if (type === "Number") return `<Field Type="Number" ${base} Decimals="0">${o.default ? `<Default>${xml(o.default)}</Default>` : ""}</Field>`;
     if (type === "Boolean") return `<Field Type="Boolean" ${base}><Default>${o.default || "0"}</Default></Field>`;
     if (type === "Date") return `<Field Type="DateTime" ${base} Format="DateOnly">${o.today ? "<Default>[today]</Default>" : ""}</Field>`;
-    if (type === "Choice") return `<Field Type="Choice" ${base} Format="Dropdown" FillInChoice="FALSE">${o.default ? `<Default>${xml(o.default)}</Default>` : ""}<CHOICES>${o.choices.map(c => `<CHOICE>${xml(c)}</CHOICE>`).join("")}</CHOICES></Field>`;
+    if (type === "Choice") return `<Field Type="Choice" ${base} Format="Dropdown" FillInChoice="${o.fillIn ? "TRUE" : "FALSE"}">${o.default ? `<Default>${xml(o.default)}</Default>` : ""}<CHOICES>${o.choices.map(c => `<CHOICE>${xml(c)}</CHOICE>`).join("")}</CHOICES></Field>`;
     throw new Error("Unknown column type " + type);
   }
 

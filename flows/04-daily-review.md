@@ -37,8 +37,8 @@ rename actions and paste expressions.
    | Task | `concat('Process meeting notes for ', formatDateTime(outputs('Today'), 'ddd MM/dd'))` |
    | Description | `join(body('MeetingLines'), decodeUriComponent('%0A'))` |
    | Hurdles / Needs / Notes | *type*: For each meeting: open its notes, add every action item to this list with Source = Meeting, then mark this Complete. |
-   | Requester | *type* Daily review |
-   | Assigned To | *type* your name |
+   | Requester Value | *Enter custom value*, type Daily review |
+   | Assigned To Value | *choose* your name |
    | Status Value | Not Started |
    | Date Assigned | `outputs('Today')` |
    | Due Date | `outputs('Today')` |

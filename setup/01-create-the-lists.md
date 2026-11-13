@@ -55,7 +55,19 @@ possible.)
 create the lists by hand from the column table below, or tell me and I'll write a Power
 Automate flow that does the same job.
 
-## 4. Check a few things
+## 4. Requester and Assigned To drop-downs
+
+Both are drop-downs filled from the **People** list, like the Drop Downs tab of the
+spreadsheet. A name that isn't there can still be typed in.
+
+- **Adding someone:** add them to *People* (tick *Requester* and/or *Can be assigned*), then
+  run `setup/sync-dropdowns.js` the same way as the setup (F12 > Console > paste > Enter).
+  It refreshes both drop-downs in a few seconds.
+- **Lists made before 13 Nov 2026** have the two columns as text boxes: run
+  `setup/sync-dropdowns.js` once to turn them into drop-downs. It keeps every item's values
+  (it checks each one afterwards and puts back any that changed).
+
+## 5. Check a few things
 
 - **People**: tick *Management* for anyone else whose requests should outrank others, and
   fill in **Email** for the people who email you requests. Flow 1 uses the Email to put
@@ -88,8 +100,8 @@ in Lists any time.
 | Task | Title | Single line of text |
 | Description | Details | Multiple lines of text |
 | Hurdles / Needs / Notes | HurdlesNotes | Multiple lines of text |
-| Requester | Requester | Single line of text |
-| Assigned To | AssigneeNames | Single line of text (default: your name) |
+| Requester | Requester | Choice (drop-down, typing a new name allowed): the People ticked *Requester* |
+| Assigned To | AssigneeNames | Choice (drop-down, typing a new name allowed): the People ticked *Can be assigned* (default: your name) |
 | Status | TaskStatus | Choice: Not Started, In Progress, Waiting / Blocked, Ready for Testing, On Hold, Complete (default Not Started) |
 | Date Assigned | DateAssigned | Date only (default today) |
 | Due Date | TaskDueDate | Date only |

@@ -42,15 +42,16 @@ No forwarding rule, nothing leaves Microsoft 365.
         `replace(triggerOutputs()?['body/from'], '''', '''''')` then type `'`
       - Top Count: `1`
 
-   b. **SharePoint > Create item.** List: **Action Items**. Fill in:
+   b. **SharePoint > Create item.** List: **Action Items**. Fill in (for a drop-down field
+      given an expression, open its list and pick **Enter custom value** first):
 
    | Field | Value (expression unless it says *type*) |
    |---|---|
    | Task | `if(greater(length(coalesce(triggerOutputs()?['body/subject'], '')), 250), substring(triggerOutputs()?['body/subject'], 0, 250), coalesce(triggerOutputs()?['body/subject'], '(no subject)'))` |
    | Description | `triggerOutputs()?['body/bodyPreview']` |
    | Hurdles / Needs / Notes | `concat('Email: ', coalesce(triggerOutputs()?['body/subject'], ''), ' - from ', triggerOutputs()?['body/from'], ', ', formatDateTime(convertFromUtc(triggerOutputs()?['body/receivedDateTime'], 'Eastern Standard Time'), 'MM/dd/yyyy'))` |
-   | Requester | `if(empty(body('FindSender')?['value']), triggerOutputs()?['body/from'], first(body('FindSender')?['value'])?['Title'])` |
-   | Assigned To | *type* your name, exactly as in the list |
+   | Requester Value | *Enter custom value*, then `if(empty(body('FindSender')?['value']), triggerOutputs()?['body/from'], first(body('FindSender')?['value'])?['Title'])` |
+   | Assigned To Value | *choose* your name |
    | Status Value | *choose* Not Started |
    | Date Assigned | `formatDateTime(convertFromUtc(utcNow(), 'Eastern Standard Time'), 'yyyy-MM-dd')` |
    | Source Value | *choose* Email |
