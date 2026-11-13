@@ -67,7 +67,13 @@ spreadsheet. A name that isn't there can still be typed in.
   `setup/sync-dropdowns.js` once to turn them into drop-downs. It keeps every item's values
   (it checks each one afterwards and puts back any that changed).
 
-## 5. Check a few things
+## 5. Row colors
+
+Past due red, due today yellow, Priority Score 22+ orange and bold, the other rows
+striped light gray (see the README). Lists made before 14 Nov 2026, or views you add
+yourself: run `setup/apply-formatting.js` once (F12 > Console > paste > Enter).
+
+## 6. Check a few things
 
 - **People**: tick *Management* for anyone else whose requests should outrank others, and
   fill in **Email** for the people who email you requests. Flow 1 uses the Email to put

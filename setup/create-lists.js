@@ -177,11 +177,18 @@
   }
 
   // ---------------------------------------------------------------- color rules
-  // Row colors in the task views: red = past due, yellow = due today (not for completed
-  // items, which are grayed). Priority Score is bold red at 22 or more, like the sheet.
+  // Row colors in the task views. Keep these two rules identical to the ones in
+  // setup/apply-formatting.js (tests/formatting.test.js checks it). First match wins:
+  // past due red, due today yellow, Priority Score 22+ orange and bold, otherwise every
+  // other row light gray. Completed items are gray text (still striped).
+  const ZEBRA = "if(@rowIndex % 2 == 1, 'ms-bgColor-neutralLighter', '')";
   const ROW_FORMAT = {
     "$schema": "https://developer.microsoft.com/json-schemas/sp/v2/row-formatting.schema.json",
-    "additionalRowClass": "=if([$TaskStatus] == 'Complete', 'ms-fontColor-neutralTertiary', if([$TaskDueDate] == '', '', if(toLocaleDateString([$TaskDueDate]) == toLocaleDateString(@now), 'sp-field-severity--warning', if(@now > [$TaskDueDate], 'sp-field-severity--severeWarning', ''))))"
+    "additionalRowClass": "=if([$TaskStatus] == 'Complete', 'ms-fontColor-neutralTertiary ' + " + ZEBRA + ", if([$TaskDueDate] != '' && toLocaleDateString([$TaskDueDate]) == toLocaleDateString(@now), 'sp-field-severity--warning', if([$TaskDueDate] != '' && @now > [$TaskDueDate], 'sp-field-severity--blocked', if([$PriorityScore] >= 22, 'sp-field-severity--severeWarning ms-fontWeight-semibold', " + ZEBRA + "))))"
+  };
+  const STRIPES = {
+    "$schema": "https://developer.microsoft.com/json-schemas/sp/v2/row-formatting.schema.json",
+    "additionalRowClass": "=" + ZEBRA
   };
   const SCORE_FORMAT = {
     "$schema": "https://developer.microsoft.com/json-schemas/sp/v2/column-formatting.schema.json",
@@ -312,7 +319,7 @@
   await ensureFields(recurring, RECURRING_FIELDS, "Recurring Work");
   await ensureViews(recurring, [{ title: "Active by Next Due", isDefault: true,
     columns: ["LinkTitle", "Owners", "Frequency", "TimingRule", "RuleType", "RuleN", "NextDue", "LeadDays", "IsActive"],
-    query: "<Where><Eq><FieldRef Name='IsActive'/><Value Type='Boolean'>1</Value></Eq></Where><OrderBy><FieldRef Name='NextDue' Ascending='TRUE'/></OrderBy>" }]);
+    query: "<Where><Eq><FieldRef Name='IsActive'/><Value Type='Boolean'>1</Value></Eq></Where><OrderBy><FieldRef Name='NextDue' Ascending='TRUE'/></OrderBy>" }], STRIPES);
 
   // Data
   const today = localToday();

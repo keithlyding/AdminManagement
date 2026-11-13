@@ -51,8 +51,20 @@ The same formula as the spreadsheet:
 
 Management Bonus: 3 when the Requester is ticked as *Management* in the People list.
 Complete items score -1. Ties are broken by the **Quick-Win Score** (Ease + Cost + Time:
-Easy, Low cost and short jobs first). A score of 22 or more shows in bold red; past-due rows
-are red and rows due today yellow.
+Easy, Low cost and short jobs first). A score of 22 or more shows in bold red.
+
+## Row colors
+
+| Row | Color |
+|---|---|
+| Past due | red |
+| Due today | yellow |
+| Priority Score 22 or more | orange, bold |
+| Everything else | every other row light gray, for easier reading |
+| Complete | gray text |
+
+First match wins: a past-due high-priority item is red. To put the colors on a view you
+made yourself, run `setup/apply-formatting.js` (F12 > Console > paste > Enter).
 
 ## Your data stays out of this repository
 
